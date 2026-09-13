@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const fetch = global.fetch;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -11,10 +12,11 @@ module.exports = {
         ),
 
     async execute(interaction) {
-        const termo = interaction.options.getString("what"); // FIXED
+        const termo = interaction.options.getString("what");
         await interaction.deferReply();
 
         try {
+            // First search
             const searchUrl = `https://deepwoken.fandom.com/api.php?action=query&list=search&srsearch=${encodeURIComponent(termo)}&format=json`;
             const res = await fetch(searchUrl);
             const data = await res.json();
@@ -26,15 +28,23 @@ module.exports = {
             }
 
             let description = "";
-            results.forEach((r, i) => {
-                description += `**${i + 1}. ${r.title}**\n`;
-            });
+
+            // For each result, fetch the REAL page title using pageid
+            for (const r of results) {
+                const pageInfoUrl = `https://deepwoken.fandom.com/api.php?action=query&pageids=${r.pageid}&format=json`;
+                const pageRes = await fetch(pageInfoUrl);
+                const pageData = await pageRes.json();
+
+                const realTitle = pageData.query.pages[r.pageid].title;
+
+                description += `**${realTitle}**\n`;
+            }
 
             const embed = new EmbedBuilder()
                 .setTitle(`🔎 Results for: ${termo}`)
                 .setDescription(description)
                 .setColor("#4B8BBE")
-                .setFooter({ text: "Use /deepinfo <page> to see more details." });
+                .setFooter({ text: "Copy a title and use /deepinfo <page>" });
 
             await interaction.editReply({ embeds: [embed] });
 
