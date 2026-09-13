@@ -27,7 +27,8 @@ const client = new Client({
 // IDs
 const canalId = "1546145935183187978";
 const mensagemId = "1548736343142703107";
-const token = "TOKEN";
+const token = process.env.TOKEN;
+client.login(token);
 const clientId = "1548734359299817564"; // este é o ID da aplicação
 
 // Comandos slash
