@@ -137,4 +137,5 @@ client.on("interactionCreate", async interaction => {
 
 // Ligar bot
 client.login(token);
+// force redeploy
 
