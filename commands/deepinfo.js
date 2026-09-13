@@ -6,13 +6,13 @@ module.exports = {
         .setName("deepinfo")
         .setDescription("Show details about a Deepwoken Wiki page")
         .addStringOption(option =>
-            option.setName("page")
+            option.setName("page") // FIXED
                 .setDescription("Exact page name (example: The Ferryman)")
                 .setRequired(true)
         ),
 
     async execute(interaction) {
-        const pageName = interaction.options.getString("page");
+        const pageName = interaction.options.getString("page"); // FIXED
         await interaction.deferReply();
 
         try {
@@ -31,7 +31,7 @@ module.exports = {
 
             const embed = new EmbedBuilder()
                 .setTitle(page.title)
-                .setDescription(page.extract.substring(0, 2000)) // Discord limit
+                .setDescription(page.extract.substring(0, 2000))
                 .setURL(link)
                 .setColor("#8A2BE2")
                 .setFooter({ text: "Deepwoken Wiki" });
