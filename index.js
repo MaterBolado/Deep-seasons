@@ -1,4 +1,6 @@
-const { Client, GatewayIntentBits, REST, Routes } = require("discord.js");
+const fs = require("fs");
+const path = require("path");
+const { Client, Collection, GatewayIntentBits, REST, Routes } = require("discord.js");
 const cron = require("node-cron");
 
 // Lista dos teus "dias"
@@ -16,6 +18,7 @@ const dias = [
 // Começa em Bloomfall (índice 3)
 let diaAtual = 3;
 
+// Criar cliente
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -28,22 +31,44 @@ const client = new Client({
 const canalId = "1546145935183187978";
 const mensagemId = "1548736343142703107";
 const token = process.env.TOKEN;
-client.login(token);
-const clientId = "1548734359299817564"; // este é o ID da aplicação
+const clientId = "1548734359299817564";
 
-// Comandos slash
-const commands = [
+// ----------------------------
+// 🔥 CARREGAR COMANDOS DA PASTA
+// ----------------------------
+client.commands = new Collection();
+
+const commandsPath = path.join(__dirname, "commands");
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith(".js"));
+
+const slashCommandsJSON = [];
+
+// Carregar comandos externos
+for (const file of commandFiles) {
+    const filePath = path.join(commandsPath, file);
+    const command = require(filePath);
+
+    client.commands.set(command.data.name, command);
+    slashCommandsJSON.push(command.data.toJSON());
+}
+
+// ----------------------------
+// 🔥 ADICIONAR /day E /next AO JSON
+// ----------------------------
+slashCommandsJSON.push(
     {
         name: "day",
-        description: "today"
+        description: "Mostra o dia atual"
     },
     {
         name: "next",
-        description: "next day"
+        description: "Avança para o próximo dia"
     }
-];
+);
 
-// Registar comandos
+// ----------------------------
+// 🔥 REGISTAR COMANDOS SLASH
+// ----------------------------
 const rest = new REST({ version: "10" }).setToken(token);
 
 (async () => {
@@ -51,7 +76,7 @@ const rest = new REST({ version: "10" }).setToken(token);
         console.log("A atualizar comandos slash...");
         await rest.put(
             Routes.applicationCommands(clientId),
-            { body: commands }
+            { body: slashCommandsJSON }
         );
         console.log("Comandos slash registados!");
     } catch (err) {
@@ -59,6 +84,9 @@ const rest = new REST({ version: "10" }).setToken(token);
     }
 })();
 
+// ----------------------------
+// 🔥 BOT PRONTO
+// ----------------------------
 client.on("ready", () => {
     console.log(`Bot ligado como ${client.user.tag}`);
 
@@ -69,7 +97,7 @@ client.on("ready", () => {
             const msg = await canal.messages.fetch(mensagemId);
 
             await msg.edit(` **${dias[diaAtual]}**`);
-            console.log("uptated to", dias[diaAtual]);
+            console.log("updated to", dias[diaAtual]);
 
             diaAtual = (diaAtual + 1) % dias.length;
 
@@ -79,18 +107,34 @@ client.on("ready", () => {
     });
 });
 
-// Responder aos comandos
+// ----------------------------
+// 🔥 EXECUTAR COMANDOS
+// ----------------------------
 client.on("interactionCreate", async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
+    // Comandos externos
+    const command = client.commands.get(interaction.commandName);
+    if (command) {
+        try {
+            return await command.execute(interaction);
+        } catch (error) {
+            console.error(error);
+            return await interaction.reply({ content: "Erro ao executar o comando.", ephemeral: true });
+        }
+    }
+
+    // Comandos internos
     if (interaction.commandName === "day") {
-        await interaction.reply(`**${dias[diaAtual]}**`);
+        return await interaction.reply(`**${dias[diaAtual]}**`);
     }
 
     if (interaction.commandName === "next") {
         diaAtual = (diaAtual + 1) % dias.length;
-        await interaction.reply(`**${dias[diaAtual]}**`);
+        return await interaction.reply(`**${dias[diaAtual]}**`);
     }
 });
 
+// Ligar bot
 client.login(token);
+
