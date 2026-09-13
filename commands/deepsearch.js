@@ -3,15 +3,15 @@ const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("deepsearch")
-        .setDescription("Pesquisa no Deepwoken Wiki")
+        .setDescription("Search the Deepwoken Wiki")
         .addStringOption(option =>
-            option.setName("termo")
-                .setDescription("O que queres pesquisar?")
+            option.setName("what")
+                .setDescription("What do you want to search for?")
                 .setRequired(true)
         ),
 
     async execute(interaction) {
-        const termo = interaction.options.getString("termo");
+        const termo = interaction.options.getString("what"); // FIXED
         await interaction.deferReply();
 
         try {
@@ -22,7 +22,7 @@ module.exports = {
             const results = data.query.search.slice(0, 10);
 
             if (!results.length) {
-                return interaction.editReply("❌ Não encontrei nada no Deepwoken Wiki.");
+                return interaction.editReply("❌ No results found on the Deepwoken Wiki.");
             }
 
             let description = "";
@@ -31,16 +31,16 @@ module.exports = {
             });
 
             const embed = new EmbedBuilder()
-                .setTitle(`🔎 Resultados para: ${termo}`)
+                .setTitle(`🔎 Results for: ${termo}`)
                 .setDescription(description)
                 .setColor("#4B8BBE")
-                .setFooter({ text: "Usa /deepinfo <nome> para ver detalhes." });
+                .setFooter({ text: "Use /deepinfo <page> to see more details." });
 
             await interaction.editReply({ embeds: [embed] });
 
         } catch (err) {
             console.error(err);
-            await interaction.editReply("⚠️ Erro ao pesquisar no Deepwoken Wiki.");
+            await interaction.editReply("⚠️ Error while searching the wiki.");
         }
     }
 };
