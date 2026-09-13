@@ -29,7 +29,7 @@ module.exports = {
 
             let description = "";
 
-            // For each result, fetch the REAL page title using pageid
+            // Fetch REAL titles using pageid
             for (const r of results) {
                 const pageInfoUrl = `https://deepwoken.fandom.com/api.php?action=query&pageids=${r.pageid}&format=json`;
                 const pageRes = await fetch(pageInfoUrl);
