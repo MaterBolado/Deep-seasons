@@ -67,7 +67,7 @@ slashCommandsJSON.push(
 );
 
 // ----------------------------
-// 🔥 REGISTAR COMANDOS SLASH
+// 🔥 REGISTAR COMANDOS SLASH E SÓ DEPOIS LIGAR O BOT
 // ----------------------------
 const rest = new REST({ version: "10" }).setToken(token);
 
@@ -79,6 +79,10 @@ const rest = new REST({ version: "10" }).setToken(token);
             { body: slashCommandsJSON }
         );
         console.log("Comandos slash registados!");
+
+        // 👉 O bot só liga depois dos comandos serem registados
+        client.login(token);
+
     } catch (err) {
         console.error(err);
     }
@@ -87,7 +91,7 @@ const rest = new REST({ version: "10" }).setToken(token);
 // ----------------------------
 // 🔥 BOT PRONTO
 // ----------------------------
-client.on("ready", () => {
+client.on("clientReady", () => {
     console.log(`Bot ligado como ${client.user.tag}`);
 
     // Atualiza todos os dias às 01:00 da manhã
@@ -134,8 +138,3 @@ client.on("interactionCreate", async interaction => {
         return await interaction.reply(`**${dias[diaAtual]}**`);
     }
 });
-
-// Ligar bot
-client.login(token);
-// force redeploy
-
