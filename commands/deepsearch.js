@@ -12,11 +12,13 @@ module.exports = {
         ),
 
     async execute(interaction) {
-        const termo = interaction.options.getString("what");
+
+        // ⭐ Defer IMEDIATO — antes de tudo
         await interaction.deferReply();
 
+        const termo = interaction.options.getString("what");
+
         try {
-            // First search
             const searchUrl = `https://deepwoken.fandom.com/api.php?action=query&list=search&srsearch=${encodeURIComponent(termo)}&format=json`;
             const res = await fetch(searchUrl);
             const data = await res.json();
@@ -54,4 +56,3 @@ module.exports = {
         }
     }
 };
-// force redeploy
