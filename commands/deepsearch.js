@@ -54,7 +54,7 @@ module.exports = {
                 .setTitle(`🔎 Results for: ${termo}`)
                 .setDescription(description)
                 .setColor("#4B8BBE")
-                .setFooter({ text: "Copie um título ou clique para abrir a página" });
+                .setFooter({ text: "click on the title" });
 
             await interaction.editReply({ embeds: [embed] });
 
