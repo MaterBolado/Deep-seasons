@@ -43,13 +43,34 @@ const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith("
 
 const slashCommandsJSON = [];
 
-// Carregar comandos externos
+// Carregar comandos externos (suporta ambos os formatos)
 for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
-    const command = require(filePath);
+    const commandModule = require(filePath);
 
-    client.commands.set(command.data.name, command);
-    slashCommandsJSON.push(command.data.toJSON());
+    // Formato 1: { data, execute }
+    if (commandModule.data && commandModule.execute) {
+        client.commands.set(commandModule.data.name, commandModule);
+        slashCommandsJSON.push(commandModule.data.toJSON());
+        continue;
+    }
+
+    // Formato 2: { commands: [SlashCommandBuilder,...], execute }
+    if (Array.isArray(commandModule.commands) && typeof commandModule.execute === "function") {
+        for (const cmdBuilder of commandModule.commands) {
+            // cmdBuilder é um SlashCommandBuilder
+            const name = cmdBuilder.name;
+            // Guardar um objeto com execute compartilhado
+            client.commands.set(name, {
+                data: cmdBuilder,
+                execute: commandModule.execute
+            });
+            slashCommandsJSON.push(cmdBuilder.toJSON());
+        }
+        continue;
+    }
+
+    console.warn(`Comando inválido em ${file}: exporta formato desconhecido.`);
 }
 
 // ----------------------------
@@ -91,7 +112,7 @@ const rest = new REST({ version: "10" }).setToken(token);
 // ----------------------------
 // 🔥 BOT PRONTO
 // ----------------------------
-client.on("clientReady", () => {
+client.on("ready", () => {
     console.log(`Bot ligado como ${client.user.tag}`);
 
     // Atualiza todos os dias às 01:00 da manhã
@@ -117,10 +138,11 @@ client.on("clientReady", () => {
 client.on("interactionCreate", async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
-    // Comandos externos
+    // Comandos externos (carregados no client.commands)
     const command = client.commands.get(interaction.commandName);
     if (command) {
         try {
+            // command pode ser { data, execute } ou o objeto que criámos para o formato 2
             return await command.execute(interaction);
         } catch (error) {
             console.error(error);
