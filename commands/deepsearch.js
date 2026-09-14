@@ -23,30 +23,38 @@ module.exports = {
             const res = await fetch(searchUrl);
             const data = await res.json();
 
-            const results = data.query.search.slice(0, 10);
+            const results = (data.query && data.query.search) ? data.query.search.slice(0, 10) : [];
 
             if (!results.length) {
                 return interaction.editReply("❌ No results found on the Deepwoken Wiki.");
             }
 
-            let description = "";
-
-            // Fetch REAL titles using pageid
-            for (const r of results) {
+            // Buscar títulos reais em paralelo
+            const pageFetches = results.map(r => {
                 const pageInfoUrl = `https://deepwoken.fandom.com/api.php?action=query&pageids=${r.pageid}&format=json`;
-                const pageRes = await fetch(pageInfoUrl);
-                const pageData = await pageRes.json();
+                return fetch(pageInfoUrl)
+                    .then(pr => pr.json())
+                    .then(pageData => {
+                        const page = pageData.query.pages[r.pageid];
+                        const realTitle = page && page.title ? page.title : r.title;
+                        // Substitui espaços por underscore e codifica para URL
+                        const pagePath = encodeURIComponent(realTitle.replace(/ /g, "_"));
+                        const pageUrl = `https://deepwoken.fandom.com/wiki/${pagePath}`;
+                        return { title: realTitle, url: pageUrl };
+                    })
+                    .catch(() => ({ title: r.title, url: `https://deepwoken.fandom.com/wiki/${encodeURIComponent(r.title.replace(/ /g, "_"))}` }));
+            });
 
-                const realTitle = pageData.query.pages[r.pageid].title;
+            const pages = await Promise.all(pageFetches);
 
-                description += `**${realTitle}**\n`;
-            }
+            // Monta descrição com links Markdown (funciona em Embed descriptions)
+            let description = pages.map(p => `**[${p.title}](${p.url})**`).join("\n");
 
             const embed = new EmbedBuilder()
                 .setTitle(`🔎 Results for: ${termo}`)
                 .setDescription(description)
                 .setColor("#4B8BBE")
-                .setFooter({ text: "Copy a title and use /deepinfo <page>" });
+                .setFooter({ text: "Copie um título ou clique para abrir a página" });
 
             await interaction.editReply({ embeds: [embed] });
 
