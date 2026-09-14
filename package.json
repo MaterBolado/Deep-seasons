@@ -1,10 +1,43 @@
 {
   "name": "deepseasons",
   "version": "1.0.0",
+  "description": "Discord bot to show Deepwoken events and seasonal day rotation",
   "main": "index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "lint": "eslint . --ext .js",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "deepwoken",
+    "events",
+    "seasons"
+  ],
+  "author": "",
+  "license": "MIT",
   "dependencies": {
     "discord.js": "^14.14.1",
     "node-cron": "^3.0.2",
-    "node-fetch": "^3.3.2"
-  }
+    "node-fetch": "^2.6.7",
+    "luxon": "^3.5.0",
+    "dotenv": "^16.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "eslint": "^8.50.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/deepseasons.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/deepseasons/issues"
+  },
+  "homepage": "https://github.com/yourusername/deepseasons#readme"
 }
